@@ -29,14 +29,15 @@ public class Connector {
 	}
 
 	public void sent(byte[] msg) throws BadPaddingException, IllegalBlockSizeException, IOException {
-		System.out.println("Sending message to mixnet");
+		//System.out.println("Sending message to mixnet");
 		OutputStream os = s.getOutputStream();
 		os.write(mn.encrypt(msg));
 
 		// Get response
 		byte [] resp = s.getInputStream().readNBytes(1);
-		if(resp[0] == 6)
-			System.out.println("Message is received");
+		if(resp[0] == 6) {
+			//System.out.println("Message is received");
+		}
 		else
 			System.out.println("Error, response: '" + resp[0] + "'");
 	}

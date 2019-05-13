@@ -1,10 +1,10 @@
-package ass1_1;
+package assignments;
 
 import mixnet.Connector;
 
 import java.net.ConnectException;
 
-public class Assignment1 {
+public class Assignment_1_1 {
 
 	public static void main(String[] args){
 		// Public keys for the mixnet encryption
