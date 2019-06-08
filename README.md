@@ -14,3 +14,12 @@ For the assignments we created the assignments.Assignment_1_1 and assignments.As
 The Assignment_1_1 class will sent a single message to the mixnet containing the message "Group 34".
 
 The Assignment_1_2 class will flush the network, after which it will sent X (70) messages and count the number of messages in the exit log.
+
+## Assignment 3 - Private Logarithm Evaluation
+The Paillier system is encrypted in the [Paillier](/src/encryption/Paillier.java) class, which can create it's own primes or use provided primes.
+If you provide your own primes this class will not check whether or not these values are actually primes.
+
+The [Assignment_3_1](src/assignments/Assignment_3_1.java) contains some test cases with random numbers.
+It will create 3 random numbers and than perform and display the secure actions.
+After displaying it it will do the same thing 50 more times, only displaying something when an error occurs.
+
