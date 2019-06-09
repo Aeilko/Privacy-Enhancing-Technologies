@@ -202,7 +202,7 @@ public class Paillier {
      */
     public static BigInteger secure_pow(BigInteger x, int exponent, PaillierPublic p){
         // x^0 = 1
-        BigInteger result = (exponent == 0 ? BigInteger.ONE : x);
+        BigInteger result = (exponent == 0 ? p.encrypt(BigInteger.ONE) : x);
         for(int i = 0; i < (exponent-1); i++){
             result = Paillier.secure_multiplication(result, x, p);
         }
