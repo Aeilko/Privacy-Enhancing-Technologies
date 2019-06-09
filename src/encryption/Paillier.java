@@ -5,6 +5,11 @@ import utility.Field;
 import java.math.BigInteger;
 import java.util.Random;
 
+/**
+ * Implementation of the Paillier cryptosystem.
+ * Also provides some of the arithmetic Paillier can perform in the ecrypted space.
+ * @author Aeilko Bos
+ */
 public class Paillier {
 
     // Private keys
@@ -19,6 +24,9 @@ public class Paillier {
     private Field zn;
     private Field zn2;
 
+    /**
+     * Creates a new instance of the Paillier cryptosystem, using random generated prime numbers of 1024 bits.
+     */
     public Paillier(){
         // Create 2 random, non-equal primes
         BigInteger p = BigInteger.ZERO;
@@ -30,14 +38,31 @@ public class Paillier {
         this.setup(p, q);
     }
 
+    /**
+     * Create a new instance Paillier cryptosystem, using the providede prime numbers.
+     * The given arguments should be prime, this method does not perform any additional checks on the security of the prime numbers
+     * @param p The first prime number
+     * @param q The second prime number, should not equal the first prime number
+     */
     public Paillier(BigInteger p, BigInteger q){
         this.setup(p, q);
     }
 
+    /**
+     * Create a new instance Paillier cryptosystem, using the providede prime numbers.
+     * The given arguments should be prime, this method does not perform any additional checks on the security of the prime numbers
+     * @param p The first prime number
+     * @param q The second prime number, should not equal the first prime number
+     */
     public Paillier(int p, int q){
         this.setup(BigInteger.valueOf(p), BigInteger.valueOf(q));
     }
 
+    /**
+     * Performs the calculations required to get the private and public keys.
+     * @param p The first prime number used
+     * @param q The second prime number used
+     */
     private void setup(BigInteger p, BigInteger q){
         // p-1 and q-1
         BigInteger p1 = p.subtract(BigInteger.ONE);
@@ -72,6 +97,11 @@ public class Paillier {
         this.zn2 = zn2;
     }
 
+    /**
+     * Encrypts the message of using the public keys of this instance
+     * @param plaintext The to be encrypted texts
+     * @return The ciphertext corresponding to the provided plaintext
+     */
     public BigInteger encrypt(BigInteger plaintext){
         BigInteger r = this.zn.randomValue();
         // (g^p * r^n) mod n^2
@@ -79,37 +109,117 @@ public class Paillier {
         return c;
     }
 
+    /**
+     * Decrypts the given value using the private keys of this instance
+     * @param ciphertext The to be decrypted ciphertext
+     * @return The plaintext corresponding to the provided ciphertext
+     */
     public BigInteger decrypt(BigInteger ciphertext){
         // (L( (c^λ) mod n^2 ) * μ ) mod n
         BigInteger x = this.zn2.pow(ciphertext, this.lambda);
         return this.zn.multiply(this.L(x), this.mu);
     }
 
-    public BigInteger secure_addition(BigInteger cipher1, BigInteger cipher2){
-        return this.zn2.multiply(cipher1, cipher2);
+
+    // Static methods, these methods only use the public key information of Paillier cryptosystem
+    /**
+     * Performs addition in the cipherspace
+     * @param cipher1 The first ciphertext
+     * @param cipher2 The second ciphertext
+     * @param p The public information of the Paillier cryptosystem
+     * @return The addition of the given ciphertexts in the cipherspace
+     */
+    public static BigInteger secure_addition(BigInteger cipher1, BigInteger cipher2, PaillierPublic p){
+        return p.getZn2().multiply(cipher1, cipher2);
     }
 
-    public BigInteger secure_scalar_multiplication(BigInteger cipher, BigInteger c){
-        return this.zn2.pow(cipher, c);
+    /**
+     * Perform scaling of the given ciphertext by the given value in the cipherspace
+     * @param cipher The cipher which will be scaled
+     * @param c The scaler
+     * @param p The public information of the Paillier cryptosystem
+     * @return The scaled value of the given cipthertext in the cipherspace
+     */
+    public static BigInteger secure_scalar_multiplication(BigInteger cipher, BigInteger c, PaillierPublic p){
+        return p.getZn2().pow(cipher, c);
     }
 
-    public BigInteger secure_subtraction(BigInteger cipher1, BigInteger cipher2){
-        BigInteger nCipher2 = this.zn2.pow(cipher2, this.n.subtract(BigInteger.ONE));
-        return this.zn2.multiply(cipher1, nCipher2);
+    /**
+     * Subtracts the second ciphertext from the first ciphertext in the cipherspace
+     * @param cipher1 The base ciphertext
+     * @param cipher2 The to be subtracted ciphertext
+     * @param p The public information of the Paillier cryptosystem
+     * @return The encrypted subtraction of the first value by the second value
+     */
+    public static BigInteger secure_subtraction(BigInteger cipher1, BigInteger cipher2, PaillierPublic p){
+        BigInteger nCipher2 = p.getZn2().pow(cipher2, p.getN().subtract(BigInteger.ONE));
+        return p.getZn2().multiply(cipher1, nCipher2);
+    }
+
+    /**
+     * Multiplies two ciphertexts in the cipherspace
+     * @param x The first ciphertext
+     * @param y The second ciphertext
+     * @param client The public information of the Paillier cryptosystem
+     * @return The encrypted product of the original values of the given ciphertexts
+     */
+    public static BigInteger secure_multiplication(BigInteger x, BigInteger y, PaillierPublic client){
+        Field zn = client.getZn();
+        Field zn2 = client.getZn2();
+
+        BigInteger rx = zn.randomValue();
+        BigInteger ry = zn.randomValue();
+
+        BigInteger Exp = zn2.multiply(x, client.encrypt(rx.negate()));
+        BigInteger Eyp = zn2.multiply(y, client.encrypt(ry.negate()));
+
+        // [x'*y']
+        BigInteger Exyp = client.decrypt_multiply_encrypt(Exp, Eyp);
+
+        // [x]^ry
+        BigInteger xry = Paillier.secure_scalar_multiplication(x, ry, client);
+        // [y]^rx
+        BigInteger yrx = Paillier.secure_scalar_multiplication(y, rx, client);
+        // [-rx * ry]
+        BigInteger mrxry = client.encrypt(client.getZn().multiply(rx.negate(), ry));
+
+        // [x'*y']*[x]^ry
+        BigInteger xpypxry = client.getZn2().multiply(Exyp, xry);
+        // [y]^rx * [-rx * ry]
+        BigInteger yrxrxry = client.getZn2().multiply(yrx, mrxry);
+        // [x'*y']*[x]^ry * [y]^rx * [-rx * ry] = [x*y]
+        BigInteger xy = client.getZn2().multiply(xpypxry, yrxrxry);
+        return xy;
     }
 
 
     // Public keys
+    /**
+     * Returns the generator of this Paillier cryptosystem
+     */
     public BigInteger getG() {
         return this.g;
     }
 
+    /**
+     * Return the n values of this Paillier cryptosystem
+     */
     public BigInteger getN(){
         return this.n;
     }
 
+    /**
+     * Returns the public accessible methods of this Paillier cryptosystem
+     */
+    public PaillierPublic getPublicPaillier(){
+        return new PaillierPublic(this);
+    }
+
 
     // Private methods
+    /**
+     * Calculates (x-1)/n
+     */
     private BigInteger L(BigInteger x){
         return x.subtract(BigInteger.ONE).divide(this.n);
     }
