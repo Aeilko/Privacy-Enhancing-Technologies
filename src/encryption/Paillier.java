@@ -2,7 +2,10 @@ package encryption;
 
 import utility.Field;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -190,6 +193,44 @@ public class Paillier {
         // [x'*y']*[x]^ry * [y]^rx * [-rx * ry] = [x*y]
         BigInteger xy = client.getZn2().multiply(xpypxry, yrxrxry);
         return xy;
+    }
+
+    /**
+     * Combines an encrypted value and a plaintext exponent and returns encrypted value of the decrypted value to the power of the exponent ([x], e => [x^e])
+     * @param x An encrypted value in the Paillier cryptosystem
+     * @param exponent The plaintext value which is used as exponent
+     * @param p The public values of the Paillier cryptosystem
+     * @return [x], e => [x^e]
+     */
+    public static BigInteger secure_pow(BigInteger x, int exponent, PaillierPublic p){
+        // x^0 = 1
+        BigInteger result = (exponent == 0 ? BigInteger.ONE : x);
+        for(int i = 0; i < (exponent-1); i++){
+            result = Paillier.secure_multiplication(result, x, p);
+        }
+        return result;
+    }
+
+    /**
+     * Performs the logarithmic approximation in base 2 on the encrypted value x, using the provided coefficients
+     * @param x An encrypted value in the Paillier cryptosystem
+     * @param coef A list of coefficients in integer form
+     * @param p The public values of the Paillier cryptosystem
+     * @return The encrypted result of the logarithmic approximation in base 2
+     */
+    public static BigInteger secure_log_approximation(BigInteger x, List<BigInteger> coef, PaillierPublic p){
+        // The first coefficient is not multiplied with x, however it does have to be encrypted to perform secure addition
+        BigInteger result = p.encrypt(coef.get(0));
+        for(int i = 1; i < coef.size(); i++){
+            // [x], i => [x^i]
+            BigInteger tmp = Paillier.secure_pow(x, i, p);
+            // c, [x^i] => [c*x^i]
+            tmp = Paillier.secure_scalar_multiplication(tmp, coef.get(i), p);
+            // [c*x^0 + c*^i + ... + c*x^(i-1)], [c*x^i] => [c*x^0 + c*^i + ... + c*x^i]
+            result = Paillier.secure_addition(result, tmp, p);
+        }
+
+        return result;
     }
 
 
