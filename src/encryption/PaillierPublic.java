@@ -6,7 +6,7 @@ import java.math.BigInteger;
 
 /**
  * The Paillier cryptosystem which only exposes the methods which should be publicly available
- * This class is not actually secure, since it does contain the original Paillier system,
+ * This class is not actually secure to distribute, since it does contain the original Paillier system,
  * however, the methods only perform actions the public is supposed to perform.
  */
 public class PaillierPublic {
