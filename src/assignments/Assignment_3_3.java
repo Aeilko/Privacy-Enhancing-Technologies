@@ -53,7 +53,7 @@ public class Assignment_3_3 {
             BigDecimal normal_logi = BigDecimal.valueOf(Math.log(i)/Math.log(2));
             normal_logi = normal_logi.setScale(4, RoundingMode.HALF_UP);
 
-            // Encrypt the vallue of i
+            // Encrypt the value of i
             BigInteger Ei = p.encrypt(BigInteger.valueOf(i));
             // Calculate the encrypted approximation of log(i) using [i]. This value is scaled
             BigInteger ElogiScaled = Paillier.secure_log_approximation(Ei, coefInt, pp);
