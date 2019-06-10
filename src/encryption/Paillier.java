@@ -137,7 +137,7 @@ public class Paillier {
     /**
      * Perform scaling of the given ciphertext by the given value in the cipherspace
      * @param cipher The cipher which will be scaled
-     * @param c The scaler
+     * @param c The plaintext scaler
      * @param p The public information of the Paillier cryptosystem
      * @return The scaled value of the given cipthertext in the cipherspace
      */
@@ -220,12 +220,21 @@ public class Paillier {
         // The first coefficient is not multiplied with x, however it does have to be encrypted to perform secure addition
         BigInteger result = p.encrypt(coef.get(0));
         for(int i = 1; i < coef.size(); i++){
+            // Check if the coefficient is negative
+            boolean negative = (coef.get(i).compareTo(BigInteger.ZERO) == -1);
+            BigInteger c = coef.get(i);
+            if(negative)
+                c = c.negate();
+
             // [x], i => [x^i]
             BigInteger tmp = Paillier.secure_pow(x, i, p);
             // c, [x^i] => [c*x^i]
-            tmp = Paillier.secure_scalar_multiplication(tmp, coef.get(i), p);
+            tmp = Paillier.secure_scalar_multiplication(tmp, c, p);
             // [c*x^0 + c*^i + ... + c*x^(i-1)], [c*x^i] => [c*x^0 + c*^i + ... + c*x^i]
-            result = Paillier.secure_addition(result, tmp, p);
+            if(negative)
+                result = Paillier.secure_subtraction(result, tmp, p);
+            else
+                result = Paillier.secure_addition(result, tmp, p);
         }
 
         return result;

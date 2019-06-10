@@ -1,9 +1,12 @@
 package utility;
 
+import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MathUtil {
 
@@ -40,5 +43,23 @@ public class MathUtil {
 
         // Return scaled list and scale used
         return new Pair<>(result, maxScale);
+    }
+
+    public static double[] polynomialRegression(Map<Integer, Double> datapoints, int order) {
+        OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
+        double[] y = new double[datapoints.size()];
+        double[][] x = new double[datapoints.size()][order];
+        int i = 0;
+        for (int k : datapoints.keySet()) {
+            y[i] = datapoints.get(k);
+
+            for(int j = 0; j < order; j++){
+                x[i][j] = Math.pow(k, (j+1));
+            }
+
+            i++;
+        }
+        regression.newSampleData(y, x);
+        return regression.estimateRegressionParameters();
     }
 }

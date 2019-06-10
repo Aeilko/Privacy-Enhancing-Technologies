@@ -27,4 +27,10 @@ public class ArrayUtil {
 			System.out.println(s1);
 		}
 	}
+
+	public static void display(double[] a){
+		for(double b: a){
+			System.out.println(b);
+		}
+	}
 }
