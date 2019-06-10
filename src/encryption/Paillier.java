@@ -104,6 +104,7 @@ public class Paillier {
      * @return The ciphertext corresponding to the provided plaintext
      */
     public BigInteger encrypt(BigInteger plaintext){
+        //System.out.println("encrypt");
         BigInteger r = this.zn.randomValue();
         // (g^p * r^n) mod n^2
         BigInteger c = this.zn2.multiply(this.zn2.pow(this.g, plaintext), this.zn2.pow(r, this.n));
@@ -116,6 +117,7 @@ public class Paillier {
      * @return The plaintext corresponding to the provided ciphertext
      */
     public BigInteger decrypt(BigInteger ciphertext){
+        //System.out.println("decrypt");
         // (L( (c^λ) mod n^2 ) * μ ) mod n
         BigInteger x = this.zn2.pow(ciphertext, this.lambda);
         return this.zn.multiply(this.L(x), this.mu);
@@ -131,6 +133,7 @@ public class Paillier {
      * @return The addition of the given ciphertexts in the cipherspace
      */
     public static BigInteger secure_addition(BigInteger cipher1, BigInteger cipher2, PaillierPublic p){
+        //System.out.println("secure_addition");
         return p.getZn2().multiply(cipher1, cipher2);
     }
 
@@ -142,6 +145,7 @@ public class Paillier {
      * @return The scaled value of the given cipthertext in the cipherspace
      */
     public static BigInteger secure_scalar_multiplication(BigInteger cipher, BigInteger c, PaillierPublic p){
+        //System.out.println("scalar_multiplication");
         return p.getZn2().pow(cipher, c);
     }
 
@@ -153,6 +157,7 @@ public class Paillier {
      * @return The encrypted subtraction of the first value by the second value
      */
     public static BigInteger secure_subtraction(BigInteger cipher1, BigInteger cipher2, PaillierPublic p){
+        //System.out.println("secure_subtraction");
         BigInteger nCipher2 = p.getZn2().pow(cipher2, p.getN().subtract(BigInteger.ONE));
         return p.getZn2().multiply(cipher1, nCipher2);
     }
@@ -219,6 +224,7 @@ public class Paillier {
     public static BigInteger secure_log_approximation(BigInteger x, List<BigInteger> coef, PaillierPublic p){
         // The first coefficient is not multiplied with x, however it does have to be encrypted to perform secure addition
         BigInteger result = p.encrypt(coef.get(0));
+
         for(int i = 1; i < coef.size(); i++){
             // Check if the coefficient is negative
             boolean negative = (coef.get(i).compareTo(BigInteger.ZERO) == -1);

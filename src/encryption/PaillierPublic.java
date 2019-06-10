@@ -38,11 +38,13 @@ public class PaillierPublic {
      * @return The encryptied value of the product of decrypted Ea and Eb. E(D(Ea) * D(Eb))
      */
     public BigInteger decrypt_multiply_encrypt(BigInteger Ea, BigInteger Eb){
+        //System.out.println("message");
         BigInteger a = p.decrypt(Ea);
         BigInteger b = p.decrypt(Eb);
 
         BigInteger ab = this.getZn().multiply(a, b);
 
+        //System.out.println("message");
         return p.encrypt(ab);
     }
 
